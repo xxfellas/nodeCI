@@ -1,0 +1,44 @@
+# .github/workflows/ci_node.yml
+
+name: CI Node.js Testes
+
+# 1. Quando o workflow será executado
+on:
+  push:
+    # Executa quando houver push para a branch main ou master
+    branches: [ main, master ]
+  pull_request:
+    # Executa quando houver um Pull Request aberto
+    branches: [ main, master ]
+
+# 2. Onde as etapas (jobs) serão executadas
+jobs:
+  test_and_build:
+    # O ambiente/sistema operacional que rodará o job
+    runs-on: ubuntu-latest
+    
+    # Estratégia de matriz: testa em diferentes versões do Node
+    strategy:
+      matrix:
+        node-version: [18.x, 20.x] 
+
+    # As etapas (steps) que o job irá executar
+    steps:
+    - name: ⚙️ Checkout do Código
+      # Ação pré-construída para baixar seu código
+      uses: actions/checkout@v4
+      
+    - name: 🛠️ Configurar Node.js ${{ matrix.node-version }}
+      # Ação pré-construída para configurar a versão do Node
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ matrix.node-version }}
+        
+    - name: 💾 Instalar Dependências
+      # O comando que você usaria localmente
+      run: npm install
+      
+    - name: 🧪 Rodar os Testes
+      # O script que definimos no seu package.json
+      # Rodará o comando: npm run test (que é o mesmo que npm test)
+      run: npm test
