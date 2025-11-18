@@ -3,10 +3,10 @@
 const request = require('supertest');
 const app = require('./index');
 
-// Variável para armazenar o ID de um cliente criado durante os testes
+
 let createdClientId;
 
-// Hook: Antes de cada teste, reseta o estado do BD (o array 'clients')
+
 beforeEach(async () => {
     await request(app).delete('/test/reset');
 });
@@ -14,7 +14,7 @@ beforeEach(async () => {
 
 describe('Client CRUD API', () => {
 
-    // Teste para o CREATE (POST /clients)
+
     it('should create a new client', async () => {
         const clientData = {
             name: 'Alice Silva',
@@ -24,20 +24,20 @@ describe('Client CRUD API', () => {
         const response = await request(app)
             .post('/clients')
             .send(clientData)
-            .expect(201); // Espera o status 201 Created
+            .expect(201); 
 
-        // Verifica o corpo da resposta
+
         expect(response.body).toHaveProperty('id');
         expect(response.body.name).toBe(clientData.name);
         expect(response.body.email).toBe(clientData.email);
 
-        createdClientId = response.body.id; // Salva o ID para testes futuros
+        createdClientId = response.body.id; 
     });
 
 
-    // Teste para o READ All (GET /clients)
+
     it('should return a list of clients', async () => {
-        // Primeiro, cria um cliente para garantir que a lista não esteja vazia
+
         await request(app)
             .post('/clients')
             .send({ name: 'Bob Souza', email: 'bob@teste.com' })
@@ -45,18 +45,17 @@ describe('Client CRUD API', () => {
 
         const response = await request(app)
             .get('/clients')
-            .expect(200); // Espera o status 200 OK
+            .expect(200); 
 
-        // Verifica se a resposta é um array e se tem pelo menos um item
         expect(Array.isArray(response.body)).toBe(true);
         expect(response.body.length).toBeGreaterThan(0);
         expect(response.body[0]).toHaveProperty('name', 'Bob Souza');
     });
 
 
-    // Teste para o READ One (GET /clients/:id)
+
     it('should return a client by ID', async () => {
-        // Cria um cliente para buscar
+
         const createResponse = await request(app)
             .post('/clients')
             .send({ name: 'Charlie Lima', email: 'charlie@teste.com' })
@@ -72,9 +71,9 @@ describe('Client CRUD API', () => {
     });
 
 
-    // Teste para o UPDATE (PUT /clients/:id)
+
     it('should update a client by ID', async () => {
-        // Cria um cliente para atualizar
+
         const createResponse = await request(app)
             .post('/clients')
             .send({ name: 'David Base', email: 'david@base.com' })
@@ -95,40 +94,34 @@ describe('Client CRUD API', () => {
         expect(response.body.email).toBe(updateData.email);
     });
 
-    // Teste para o DELETE (DELETE /clients/:id)
+  
     it('should delete a client by ID', async () => {
-        // Cria um cliente para deletar
         const createResponse = await request(app)
             .post('/clients')
             .send({ name: 'Eva Delete', email: 'eva@delete.com' })
             .expect(201);
         const id = createResponse.body.id;
 
-        // Deleta o cliente
         await request(app)
             .delete(`/clients/${id}`)
-            .expect(204); // Espera o status 204 No Content
-
-        // Tenta buscar o cliente deletado para confirmar a exclusão
+            .expect(204);
         await request(app)
             .get(`/clients/${id}`)
-            .expect(404); // Espera o status 404 Not Found
+            .expect(404);
     });
 
-    // Teste de validação: ID não encontrado
+
     it('should return 404 for a non-existent ID on GET, PUT, and DELETE', async () => {
         const nonExistentId = 'non-existent-id-123';
 
-        // GET
+
         await request(app).get(`/clients/${nonExistentId}`).expect(404);
 
-        // PUT
         await request(app)
             .put(`/clients/${nonExistentId}`)
             .send({ name: 'Test', email: 'test@test.com' })
             .expect(404);
 
-        // DELETE
         await request(app).delete(`/clients/${nonExistentId}`).expect(404);
     });
 

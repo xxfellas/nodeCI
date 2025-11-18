@@ -1,22 +1,16 @@
-// index.js
-
 const express = require('express');
 const { v4: uuidv4 } = require('uuid');
 
 const app = express();
 const PORT = 3000;
 
-// Middleware para processar JSON nas requisições
+
 app.use(express.json());
 
-// Armazenamento de dados em memória (simulando um BD)
+
 let clients = [];
 
-/**
- * Rotas do CRUD
- */
 
-// 1. CREATE (Cria um novo cliente)
 app.post('/clients', (req, res) => {
     const { name, email } = req.body;
 
@@ -34,12 +28,12 @@ app.post('/clients', (req, res) => {
     return res.status(201).json(newClient);
 });
 
-// 2. READ All (Retorna todos os clientes)
+
 app.get('/clients', (req, res) => {
     return res.json(clients);
 });
 
-// 3. READ One (Retorna um cliente pelo ID)
+
 app.get('/clients/:id', (req, res) => {
     const { id } = req.params;
     const client = clients.find(c => c.id === id);
@@ -51,7 +45,7 @@ app.get('/clients/:id', (req, res) => {
     return res.json(client);
 });
 
-// 4. UPDATE (Atualiza um cliente pelo ID)
+
 app.put('/clients/:id', (req, res) => {
     const { id } = req.params;
     const { name, email } = req.body;
@@ -75,7 +69,7 @@ app.put('/clients/:id', (req, res) => {
     return res.json(updatedClient);
 });
 
-// 5. DELETE (Deleta um cliente pelo ID)
+
 app.delete('/clients/:id', (req, res) => {
     const { id } = req.params;
     const initialLength = clients.length;
@@ -86,20 +80,20 @@ app.delete('/clients/:id', (req, res) => {
         return res.status(404).json({ error: 'Client not found.' });
     }
 
-    return res.status(204).send(); // Resposta 204 No Content para sucesso sem corpo
+    return res.status(204).send(); 
 });
 
-// Função para resetar os dados para os testes
+
 app.delete('/test/reset', (req, res) => {
     clients = [];
     return res.status(204).send();
 });
 
 
-// Exporta o app para que o supertest possa usá-lo
+
 module.exports = app;
 
-// Inicia o servidor se o arquivo for executado diretamente
+
 if (require.main === module) {
     app.listen(PORT, () => {
         console.log(`Server is running on http://localhost:${PORT}`);
