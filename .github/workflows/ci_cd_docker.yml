@@ -1,0 +1,72 @@
+# .github/workflows/ci_cd_docker.yml
+
+name: Build, Test, and Push to GHCR
+
+on:
+  push:
+    # O workflow será acionado em push para a branch principal
+    branches: [ main ]
+
+env:
+  # Define o nome da imagem no Container Registry
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  # Job 1: Executa os testes diretamente no Runner (mais rápido que dentro do Docker)
+  test:
+    runs-on: ubuntu-latest
+    steps:
+    - name: ⚙️ Checkout do Código
+      uses: actions/checkout@v4
+      
+    - name: 🛠️ Configurar Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20.x'
+        
+    - name: 💾 Instalar Dependências
+      run: npm install
+      
+    - name: 🧪 Rodar os Testes
+      # Este passo executará o script 'npm test' do seu package.json
+      run: npm test
+
+  # Job 2: Constrói a Imagem e Publica no GHCR
+  build_and_push:
+    # Garante que este job só comece se o job 'test' for concluído com sucesso
+    needs: test 
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write # Permissão necessária para escrever no GHCR
+      
+    steps:
+    - name: ⚙️ Checkout do Código
+      uses: actions/checkout@v4
+      
+    - name: 🔑 Login no GitHub Container Registry (GHCR)
+      uses: docker/login-action@v3
+      with:
+        # Endereço do registro do GitHub
+        registry: ghcr.io
+        # Usa o usuário padrão do GitHub
+        username: ${{ github.actor }}
+        # Usa o GITHUB_TOKEN gerado automaticamente para autenticação
+        password: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: 🏷️ Definir Tags da Imagem
+      id: meta
+      uses: docker/metadata-action@v5
+      with:
+        images: ghcr.io/${{ env.IMAGE_NAME }}
+        tags: |
+          type=sha,prefix=,suffix=,enable=true,priority=100,format=short
+          type=raw,value=latest,enable={{is_default_branch}}
+
+    - name: 🏗️ Construir e Publicar a Imagem Docker
+      uses: docker/build-push-action@v5
+      with:
+        context: .
+        push: true
+        tags: ${{ steps.meta.outputs.tags }}
+        labels: ${{ steps.meta.outputs.labels }}
